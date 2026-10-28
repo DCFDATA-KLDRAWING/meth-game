@@ -703,12 +703,15 @@
       if (!speechEnabled || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel(); // 停止先前的朗讀
 
-      // 去除數學符號與排版雜字，讓語音更流暢親切
-      const cleanText = text
-        .replace(/[×*]/g, '乘以')
-        .replace(/[÷/]/g, '除以')
-        .replace(/\[([^\]]+)\]/g, '$1的最小公倍數')
-        .replace(/\(([^)]+)\)/g, '$1的最大公因數')
+      // 去除數學符號與排版雜字，將乘號發音替換為「成以」，徹底避免發音成「剩」
+      let cleanText = text
+        .replace(/[×✕✖\*]/g, ' 成以 ')
+        .replace(/([0-9a-zA-Z\u4e00-\u9fa5])\s*[xX]\s*([0-9a-zA-Z\u4e00-\u9fa5])/g, '$1 成以 $2') // 算式中的 x 替換為「成以」
+        .replace(/[xX]/g, ' 叉 ') // 單獨出現的 X 讀作「叉」
+        .replace(/[÷/]/g, ' 除以 ')
+        .replace(/\[([^\]]+)\]/g, '$1 的最小公倍數')
+        .replace(/\(([^)]+)\)/g, '$1 的最大公因數')
+        .replace(/○/g, ' 圈，正確 ')
         .replace(/ステップ|SOP/gi, '步驟');
 
       const utterance = new SpeechSynthesisUtterance(cleanText);
