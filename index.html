@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>五上數學大冒險：因數與倍數神殿</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
+    body {
+      font-family: 'Zen Maru Gothic', sans-serif, system-ui;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+    @keyframes bounce-short {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .animate-bounce-short {
+      animation: bounce-short 1s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-amber-50 min-h-screen flex flex-col text-slate-800">
+
+  <!-- 頂部導航欄 (iPad 優化) -->
+  <header class="bg-white/90 backdrop-blur border-b border-amber-200 sticky top-0 z-30 px-4 py-3 shadow-sm">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-xl shadow-md">
+          <i class="fa-solid fa-shapes"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg md:text-xl text-amber-900 leading-tight">因數與倍數特訓營</h1>
+          <p class="text-xs text-amber-600 font-semibold">台北市北投國小 / 明德小學 五上數學精選</p>
+        </div>
+      </div>
+
+      <!-- 右側資訊與工具 -->
+      <div class="flex items-center gap-2 md:gap-4">
+        <!-- 語音切換鈕 -->
+        <button id="toggle-speech-btn" class="flex items-center gap-1.5 px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-xl text-sm font-bold transition shadow-sm active:scale-95">
+          <i id="speech-icon" class="fa-solid fa-volume-high text-amber-600"></i>
+          <span class="hidden sm:inline" id="speech-status-txt">語音已開啟</span>
+        </button>
+
+        <!-- 星星積分 -->
+        <div class="flex items-center gap-1.5 bg-yellow-100 border border-yellow-300 px-3 py-1.5 rounded-xl text-yellow-800 font-bold shadow-inner">
+          <i class="fa-solid fa-star text-yellow-500 text-base"></i>
+          <span id="star-count" class="text-base">0</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主內容區 -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-5 flex flex-col gap-4">
+    
+    <!-- 分類切換標籤 -->
+    <div class="grid grid-cols-4 gap-2 bg-amber-200/60 p-1.5 rounded-2xl">
+      <button onclick="switchCategory('tf')" id="cat-tf" class="cat-btn py-2.5 rounded-xl font-bold text-sm md:text-base transition text-center shadow-sm bg-white text-amber-900">
+        是非觀念題 <span id="badge-tf" class="text-xs px-1.5 py-0.5 rounded-full bg-amber-100">8</span>
+      </button>
+      <button onclick="switchCategory('choice')" id="cat-choice" class="cat-btn py-2.5 rounded-xl font-bold text-sm md:text-base transition text-center text-amber-800 hover:bg-white/50">
+        選擇測驗題 <span id="badge-choice" class="text-xs px-1.5 py-0.5 rounded-full bg-amber-100">8</span>
+      </button>
+      <button onclick="switchCategory('fill')" id="cat-fill" class="cat-btn py-2.5 rounded-xl font-bold text-sm md:text-base transition text-center text-amber-800 hover:bg-white/50">
+        填空計算題 <span id="badge-fill" class="text-xs px-1.5 py-0.5 rounded-full bg-amber-100">8</span>
+      </button>
+      <button onclick="switchCategory('app')" id="cat-app" class="cat-btn py-2.5 rounded-xl font-bold text-sm md:text-base transition text-center text-amber-800 hover:bg-white/50">
+        生活應用題 <span id="badge-app" class="text-xs px-1.5 py-0.5 rounded-full bg-amber-100">12</span>
+      </button>
+    </div>
+
+    <!-- 題目選擇橫向捲軸 (關卡選擇) -->
+    <div class="bg-white rounded-2xl p-3 shadow-sm border border-amber-100 flex items-center gap-2 overflow-x-auto custom-scrollbar" id="level-selector-bar">
+      <!-- 關卡按鈕動態注入 -->
+    </div>
+
+    <!-- 題目主展示卡片 -->
+    <div class="bg-white rounded-3xl p-5 md:p-7 shadow-md border border-amber-200/80 flex-1 flex flex-col justify-between relative overflow-hidden">
+      
+      <!-- 卡片背景小裝飾 -->
+      <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-amber-100/40 rounded-full pointer-events-none"></div>
+
+      <!-- 題型標籤與題號 -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span id="question-type-badge" class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200">
+              觀念是非題
+            </span>
+            <span id="question-number-badge" class="text-xs text-slate-500 font-bold">
+              第 1 / 8 題
+            </span>
+          </div>
+
+          <!-- 語音重播鍵 & 畫板工具開關 -->
+          <div class="flex items-center gap-2">
+            <button onclick="speakCurrentQuestion()" class="p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 transition flex items-center gap-1 text-sm font-bold" title="朗讀題目">
+              <i class="fa-solid fa-volume-high"></i>
+              <span class="text-xs">讀題</span>
+            </button>
+            <button onclick="toggleScratchpad()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1 text-sm font-bold" title="開啟計算草稿紙">
+              <i class="fa-solid fa-pen"></i>
+              <span class="text-xs hidden sm:inline">計算草稿</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 題目文字 -->
+        <div class="bg-amber-50/70 p-4 md:p-6 rounded-2xl border border-amber-200/60 mb-6">
+          <h2 id="question-text" class="text-lg md:text-xl font-bold text-slate-800 leading-relaxed">
+            題目載入中...
+          </h2>
+          <div id="question-subtext" class="mt-2 text-sm text-slate-500 hidden font-medium"></div>
+        </div>
+
+        <!-- 作答區 (動態呈現 是非按鈕 / 選擇按鈕 / 輸入框) -->
+        <div id="answer-interactive-area" class="my-4">
+          <!-- 動態注入作答元件 -->
+        </div>
+      </div>
+
+      <!-- 作答反饋與解說區塊 (預設隱藏，作答後展開) -->
+      <div id="explanation-container" class="mt-6 border-t border-slate-200 pt-5 hidden">
+        <div id="feedback-banner" class="flex items-center gap-3 p-4 rounded-2xl mb-4 font-bold text-base transition">
+          <i id="feedback-icon" class="text-2xl"></i>
+          <span id="feedback-text"></span>
+        </div>
+
+        <!-- SOP 邏輯解析三步驟 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 md:p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-black text-amber-900 text-base md:text-lg flex items-center gap-2">
+              <i class="fa-solid fa-graduation-cap text-amber-600"></i>
+              大師題解與思考SOP
+            </h3>
+            <button onclick="speakExplanation()" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2.5 py-1.5 rounded-lg font-bold flex items-center gap-1">
+              <i class="fa-solid fa-headphones"></i> 聆聽解題SOP
+            </button>
+          </div>
+
+          <!-- 思考步驟 1: 題意剖析 -->
+          <div class="flex gap-3">
+            <div class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm flex items-center justify-center">1</div>
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm">【題目情境剖析】</h4>
+              <p id="exp-context" class="text-slate-600 text-sm mt-0.5 leading-relaxed"></p>
+            </div>
+          </div>
+
+          <!-- 思考步驟 2: 思考邏輯 -->
+          <div class="flex gap-3">
+            <div class="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 text-purple-700 font-black text-sm flex items-center justify-center">2</div>
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm">【解題思考邏輯】</h4>
+              <p id="exp-logic" class="text-slate-600 text-sm mt-0.5 leading-relaxed"></p>
+            </div>
+          </div>
+
+          <!-- 思考步驟 3: 算式 SOP -->
+          <div class="flex gap-3">
+            <div class="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 font-black text-sm flex items-center justify-center">3</div>
+            <div class="w-full">
+              <h4 class="font-bold text-slate-800 text-sm">【算式 SOP 與答案】</h4>
+              <div id="exp-sop" class="text-slate-700 text-sm mt-1 bg-white p-3 rounded-xl border border-slate-200 font-mono leading-relaxed whitespace-pre-line"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 下一題按鈕 -->
+        <div class="mt-5 flex justify-end">
+          <button onclick="nextQuestion()" class="px-6 py-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-2xl shadow-lg transition flex items-center gap-2">
+            <span>下一道挑戰</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- iPad 專用可折疊手繪計算草稿紙 (Canvas) -->
+  <div id="scratchpad-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 hidden backdrop-blur-sm">
+    <div class="bg-white rounded-3xl w-full max-w-2xl h-[85vh] flex flex-col shadow-2xl overflow-hidden border-2 border-amber-300">
+      <div class="bg-amber-100 px-4 py-3 flex items-center justify-between border-b border-amber-200">
+        <div class="font-bold text-amber-900 flex items-center gap-2">
+          <i class="fa-solid fa-pencil text-amber-600"></i>
+          <span>iPad 計算草稿板</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="clearCanvas()" class="px-3 py-1 bg-white hover:bg-red-50 text-red-600 font-bold text-xs rounded-lg border border-red-200 transition">
+            <i class="fa-solid fa-trash-can mr-1"></i>清空
+          </button>
+          <button onclick="toggleScratchpad()" class="px-3 py-1 bg-amber-500 text-white font-bold text-xs rounded-lg transition">
+            關閉
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 relative bg-slate-50 touch-none" id="canvas-container">
+        <canvas id="scratch-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+      </div>
+      <div class="bg-white p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <span>支援手指或 Apple Pencil 觸控書寫</span>
+        <div class="flex items-center gap-3">
+          <span>筆觸粗細:</span>
+          <button onclick="setStroke(2)" class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-white text-[10px]">細</button>
+          <button onclick="setStroke(5)" class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-white text-xs">中</button>
+          <button onclick="setStroke(9)" class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-white text-xs">粗</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 資料庫與遊戲主邏輯 -->
+  <script>
+    // -------------------------------------------------------------
+    // 1. 考卷題目資料庫 (包含題目、正解、解析三部曲：剖析、思考、SOP)
+    // -------------------------------------------------------------
+    const mathDatabase = {
+      // 一、是非題 (共8題)
+      tf: [
+        {
+          id: 'tf1',
+          question: "6和12的公倍數一共有4個。",
+          answer: false,
+          userAnswer: null,
+          analysis: {
+            context: "題目宣稱兩個數（6和12）的公倍數數量只有『4個』有限個數。",
+            logic: "任何大於0的整數倍數都可以一直乘下去（如 ×1, ×2, ×3... 無窮無盡）。因此，任意兩整數的公倍數也有無限多個。",
+            sop: "步驟 1：列出最小公倍數 [6, 12] = 12。\n步驟 2：公倍數序列為 12, 24, 36, 48, 60, 72, ...\n步驟 3：判定：此數列會無限延伸，不是只有4個。\n答案：× (錯誤，有無限多個)"
+          }
+        },
+        {
+          id: 'tf2',
+          question: "甲數 × 乙數 = 丙數 (甲、乙、丙三數都是不為0的整數)，則甲數是乙數和丙數的公倍數。",
+          answer: false,
+          userAnswer: null,
+          analysis: {
+            context: "乘法算式中，兩個相乘的整數與乘積之間的因倍數角色關係。",
+            logic: "在乘法算式中，『乘積』是另外兩個數的公倍數；而前面相乘的兩個數則是乘積的因數。",
+            sop: "步驟 1：檢驗式子 甲 × 乙 = 丙。\n步驟 2：丙數能被甲數整除，也能被乙數整除。\n步驟 3：因此『丙數』是甲和乙的倍數，『甲數』與『乙數』是丙數的因數。\n答案：× (錯誤，甲不是公倍數，丙才是)"
+          }
+        },
+        {
+          id: 'tf3',
+          question: "兩整數的最大公因數，一定大於 1。",
+          answer: false,
+          userAnswer: null,
+          analysis: {
+            context: "討論任意兩個整數之間的最大公因數是否『保證大於1』。",
+            logic: "當兩個數除了1之外沒有其他共同因數時（互質關係，例如 3 和 5，或 8 和 9），它們的最大公因數剛好就是 1。",
+            sop: "步驟 1：舉反例驗證。例如取 3 和 4。\n步驟 2：3的因數有 1, 3；4的因數有 1, 2, 4。\n步驟 3：它們共同的因數只有 1，所以 (3, 4) = 1，並不大於1。\n答案：× (錯誤，互質時最大公因數為1)"
+          }
+        },
+        {
+          id: 'tf4',
+          question: "甲數是乙數和丙數的公倍數，甲數的最小值一定是乙數 × 丙數。",
+          answer: false,
+          userAnswer: null,
+          analysis: {
+            context: "公倍數的最小值（即最小公倍數）是否必定等於兩數直接相乘？",
+            logic: "只有在兩數『互質』時，最小公倍數才會剛好是兩數相乘；如果兩數原本就有大於1的公因數，最小公倍數會小於兩數相乘之積。",
+            sop: "步驟 1：舉反例驗證。取 4 和 6。\n步驟 2：4 × 6 = 24。\n步驟 3：但 4 和 6 的最小公倍數是 12，12 < 24。\n步驟 4：只有互質時才等於相乘，因此『一定』這說法錯誤。\n答案：× (錯誤)"
+          }
+        },
+        {
+          id: 'tf5',
+          question: "80 ÷ 10 = 8，所以 8 和 10 的最小公倍數是 80。",
+          answer: false,
+          userAnswer: null,
+          analysis: {
+            context: "檢驗除法關係是否代表該數即為兩除數的『最小』公倍數。",
+            logic: "80 確實是 8 和 10 的公倍數，但題目問的是『最小』公倍數，必須找出最小的第一個共同倍數。",
+            sop: "步驟 1：8的倍數：8, 16, 24, 32, 40, 48...\n步驟 2：10的倍數：10, 20, 30, 40, 50...\n步驟 3：共同擁有的最小公倍數 [8, 10] = 40，並非 80。\n答案：× (錯誤，應為40)"
+          }
+        },
+        {
+          id: 'tf6',
+          question: "任意兩個整數相乘的積，一定是這兩個整數的公倍數。",
+          answer: true,
+          userAnswer: null,
+          analysis: {
+            context: "兩個整數相乘得到的積，是否必定為這兩數的公倍數？",
+            logic: "設兩數為 A 與 B，其積為 A×B。因為 (A×B) ÷ A = B，且 (A×B) ÷ B = A，都能整除，故積一定是兩數的倍數。",
+            sop: "步驟 1：整除定義：能被 A 整除就是 A 的倍數，能被 B 整除就是 B 的倍數。\n步驟 2：A×B 同時含有因數 A 與因數 B。\n步驟 3：判定其必定為公倍數無誤。\n答案：○ (正確)"
+          }
+        },
+        {
+          id: 'tf7',
+          question: "5 × 3 × 8 = 120，所以 120 是 3、5、8 的公倍數。",
+          answer: true,
+          userAnswer: null,
+          analysis: {
+            context: "三個整數相乘後的積，是否為這三個整數的公倍數？",
+            logic: "120 是由 3、5、8 連乘而得，分別除以 3、5、8 都能得到整數商（餘數為0），因此 120 同時是三者的倍數。",
+            sop: "步驟 1：檢驗 120 ÷ 3 = 40 (整除)\n步驟 2：檢驗 120 ÷ 5 = 24 (整除)\n步驟 3：檢驗 120 ÷ 8 = 15 (整除)\n步驟 4：120 確實為 3, 5, 8 之公倍數。\n答案：○ (正確)"
+          }
+        },
+        {
+          id: 'tf8',
+          question: "甲、乙兩數都是大於 1 的整數，且分別都只有 2 個因數，則甲數和乙數的最大公因數一定是 1。(假設兩數不相同)",
+          answer: true,
+          userAnswer: null,
+          analysis: {
+            context: "『只有2個因數』是質數的定義。討論兩個相異質數的最大公因數。",
+            logic: "只有2個因數的大於1整數代表它們是質數（因數只有1和本身）。相異兩質數沒有其他任何共同因數，因此最大公因數必為1。",
+            sop: "步驟 1：甲數的因數：1、甲數。\n步驟 2：乙數的因數：1、乙數。\n步驟 3：因為兩數不同且皆為質數，共同因數只有 1。\n步驟 4：因此最大公因數 (甲, 乙) = 1。\n答案：○ (正確)"
+          }
+        }
+      ],
+
+      // 二、選擇題 (共8題)
+      choice: [
+        {
+          id: 'c1',
+          question: "甲和 21 的最小公倍數是 42，甲可能是多少？",
+          options: ["3", "6", "8", "9"],
+          answerIndex: 1, // 6
+          userAnswer: null,
+          analysis: {
+            context: "已知其中一個數是 21，兩數最小公倍數為 42，反求另一個數。",
+            logic: "檢驗四個選項分別與 21 計算最小公倍數，何者的最小公倍數剛好是 42。",
+            sop: "① [3, 21] = 21 (不合)\n② [6, 21]：6=2×3, 21=3×7，最小公倍數 = 2×3×7 = 42 (符合！)\n③ [8, 21] = 168 (不合)\n④ [9, 21] = 63 (不合)\n答案選 ② 6"
+          }
+        },
+        {
+          id: 'c2',
+          question: "100 和 25 的最大公因數是多少？",
+          options: ["100", "50", "25", "1"],
+          answerIndex: 2, // 25
+          userAnswer: null,
+          analysis: {
+            context: "求 100 與 25 的最大公因數。",
+            logic: "觀察兩數關係：100 ÷ 25 = 4（能整除）。當較大數是較小數的倍數時，較小數本身就是兩數的最大公因數！",
+            sop: "步驟 1：25 的因數有 1, 5, 25。\n步驟 2：100 的因數有 1, 2, 4, 5, 10, 20, 25, 50, 100。\n步驟 3：共同擁有的因數中最大者為 25。\n答案選 ③ 25"
+          }
+        },
+        {
+          id: 'c3',
+          question: "4 和 12 的最小公倍數，和下列哪一組數的最小公倍數相同？",
+          options: ["5 和 12", "7 和 12", "8 和 12", "12 和 3"],
+          answerIndex: 3, // 12 和 3
+          userAnswer: null,
+          analysis: {
+            context: "先求出題目基準的最小公倍數，再比對選項。",
+            logic: "12 是 4 的 3 倍，所以 [4, 12] = 12。我們要在選項中尋找最小公倍數也是 12 的組合。",
+            sop: "基準：[4, 12] = 12\n① [5, 12] = 60\n② [7, 12] = 84\n③ [8, 12] = 24\n④ [12, 3] = 12 (符合！)\n答案選 ④ 12 和 3"
+          }
+        },
+        {
+          id: 'c4',
+          question: "甲 ÷ 丙 = 6，乙 ÷ 丙 = 2，則甲、乙、丙三數的最大公因數是多少？",
+          options: ["丙", "乙", "甲", "不一定"],
+          answerIndex: 0, // 丙
+          userAnswer: null,
+          analysis: {
+            context: "代數除法整除式，推導三數的最大公因數。",
+            logic: "甲÷丙=6 代表 甲=6×丙（丙是甲的因數）；乙÷丙=2 代表 乙=2×丙（丙是乙的因數）；而丙的最大因數也是丙本身。",
+            sop: "步驟 1：甲是丙的6倍，乙是丙的2倍。\n步驟 2：丙同時是甲、乙、丙三數的共同因數。\n步驟 3：因為任何數的因數不可能比丙本身還大，所以三數最大公因數必為『丙』。\n答案選 ① 丙"
+          }
+        },
+        {
+          id: 'c5',
+          question: "甲和乙是大於 1 的整數，兩數的最小公倍數是乙，則甲和乙的最大公因數是多少？",
+          options: ["1", "甲", "乙", "甲×乙"],
+          answerIndex: 1, // 甲
+          userAnswer: null,
+          analysis: {
+            context: "倍數關係下的最大公因數判定。",
+            logic: "兩數的最小公倍數是乙，代表『乙是甲的倍數』，反過來『甲就是乙的因數』。",
+            sop: "步驟 1：因為乙是甲的倍數，乙能被甲整除。\n步驟 2：甲的因數中最大的是甲；而乙也能被甲整除。\n步驟 3：因此甲、乙兩數的最大公因數就是較小的『甲』。\n答案選 ② 甲"
+          }
+        },
+        {
+          id: 'c6',
+          question: "甲、乙兩數，甲數是乙數的因數，甲、乙兩數的最小公倍數是多少？",
+          options: ["甲數 × 乙數", "甲數", "乙數", "甲數 + 乙數"],
+          answerIndex: 2, // 乙數
+          userAnswer: null,
+          analysis: {
+            context: "因倍數關係中，已知甲是乙的因數，求最小公倍數。",
+            logic: "甲是乙的因數，表示乙是甲的倍數。當一個數是另一個數的倍數時，它們的最小公倍數就是較大的那個數（乙數）。",
+            sop: "步驟 1：設甲=3，乙=12（3是12的因數）。\n步驟 2：3和12的最小公倍數就是 12（即乙數本身）。\n步驟 3：推得最小公倍數為乙數。\n答案選 ③ 乙數"
+          }
+        },
+        {
+          id: 'c7',
+          question: "4 和 14 的公倍數中，從小排到大，第 5 個公倍數是多少？",
+          options: ["14", "28", "112", "140"],
+          answerIndex: 3, // 140
+          userAnswer: null,
+          analysis: {
+            context: "求第 N 個公倍數的運算技巧。",
+            logic: "所有的公倍數都是『最小公倍數』的整數倍（1倍、2倍、3倍、4倍、5倍...）。所以第5個公倍數就是 最小公倍數 × 5。",
+            sop: "步驟 1：求 4 與 14 的最小公倍數。\n4 = 2×2，14 = 2×7\n最小公倍數 [4, 14] = 2×2×7 = 28。\n步驟 2：第 5 個公倍數 = 28 × 5 = 140。\n答案選 ④ 140"
+          }
+        },
+        {
+          id: 'c8',
+          question: "58 和 87 的公因數有幾個？",
+          options: ["1 個", "2 個", "3 個", "無限多個"],
+          answerIndex: 1, // 2 個
+          userAnswer: null,
+          analysis: {
+            context: "計算兩個二位數的共同因數個數。",
+            logic: "列出兩數的所有因數，比對出共同擁有的公因數並清點個數。",
+            sop: "步驟 1：58 的因數：1, 2, 29, 58。\n步驟 2：87 的因數：1, 3, 29, 87。\n步驟 3：共同的因數為：1 和 29。\n步驟 4：共有 2 個公因數。\n答案選 ② 2 個"
+          }
+        }
+      ],
+
+      // 三、填空題 (精選8題)
+      fill: [
+        {
+          id: 'f1',
+          question: "100 以內，是 3 的倍數也是 8 的倍數的數有哪些？(以逗號或頓號隔開)",
+          correctAnswers: ["24,48,72,96", "24、48、72、96", "24 48 72 96"],
+          hint: "先算 3 和 8 的最小公倍數，再找出 100 以內的所有倍數",
+          userAnswer: "",
+          analysis: {
+            context: "求指定範圍內（100以內）兩數的公倍數集合。",
+            logic: "『是3也是8的倍數』就是『3和8的公倍數』。先找出最小公倍數，再乘以 2, 3, 4 直到接近 100。",
+            sop: "步驟 1：3 和 8 互質，最小公倍數 = 3 × 8 = 24。\n步驟 2：列出 24 的倍數：\n24 × 1 = 24\n24 × 2 = 48\n24 × 3 = 72\n24 × 4 = 96\n(24 × 5 = 120 超過 100)\n答案：24、48、72、96"
+          }
+        },
+        {
+          id: 'f2',
+          question: "15 和 25 的所有公倍數中，比 200 小的數有哪些？",
+          correctAnswers: ["75,150", "75、150", "75 150"],
+          hint: "先求 [15, 25] 的最小公倍數",
+          userAnswer: "",
+          analysis: {
+            context: "找出小於 200 的公倍數列表。",
+            logic: "先用短除法或質因數分解找出 15 和 25 的最小公倍數，再連續累加或相乘列出小於 200 的數字。",
+            sop: "步驟 1：15 = 3 × 5，25 = 5 × 5。\n步驟 2：最小公倍數 [15, 25] = 3 × 5 × 5 = 75。\n步驟 3：比 200 小的公倍數：\n75 × 1 = 75\n75 × 2 = 150\n(75 × 3 = 225 超過200)\n答案：75、150"
+          }
+        },
+        {
+          id: 'f3',
+          question: "已知「9 × 8 = 72，9 × 5 = 45」，9 是 72 的因數，9 也是 45 的因數，所以 9 是 72 和 45 的什麼數？",
+          correctAnswers: ["公因數"],
+          hint: "兩個數共同有的因數稱為？",
+          userAnswer: "",
+          analysis: {
+            context: "數學術語核心觀念填空。",
+            logic: "一個整數如果同時是兩個或兩個以上整數的因數，這個整數就稱為它們的『公因數』。",
+            sop: "步驟 1：9 能整除 72（是 72 的因數）。\n步驟 2：9 能整除 45（是 45 的因數）。\n步驟 3：共同具備的因數稱為『公因數』。\n答案：公因數"
+          }
+        },
+        {
+          id: 'f4',
+          question: "甲數和乙數的最小公倍數是 30，乙數和丙數的最小公倍數是 105，則甲、乙、丙三數的最小公倍數是多少？",
+          correctAnswers: ["210"],
+          hint: "30 = 2×3×5，105 = 3×5×7，求三者共同整合的最小公倍數",
+          userAnswer: "",
+          analysis: {
+            context: "從兩兩一組的最小公倍數，推導三個數字整體的最小公倍數。",
+            logic: "三數的最小公倍數 [甲, 乙, 丙]，等於兩組公倍數 [甲, 乙] 與 [乙, 丙] 的最小公倍數，即求 [30, 105]！",
+            sop: "步驟 1：[甲, 乙] = 30，[乙, 丙] = 105。\n步驟 2：[甲, 乙, 丙] = [30, 105]。\n步驟 3：30 = 2 × 3 × 5；105 = 3 × 5 × 7。\n步驟 4：取各質因數最高次方：2 × 3 × 5 × 7 = 210。\n答案：210"
+          }
+        },
+        {
+          id: 'f5',
+          question: "同樂會老師準備 64 塊蛋糕和 96 罐飲料，每位學生分到的蛋糕一樣多，飲料也一樣多且剛好分完，參加的學生最多有幾位？",
+          correctAnswers: ["32", "32位", "32人"],
+          hint: "平分且剛好分完，求『最多』人，代表求最大公因數",
+          userAnswer: "",
+          analysis: {
+            context: "物品平分問題，求最大可能人數。",
+            logic: "人數必須能整除 64，也能整除 96（公因數），且題目要求人數『最多』，所以求最大公因數 (64, 96)。",
+            sop: "步驟 1：64 = 32 × 2\n步驟 2：96 = 32 × 3\n步驟 3：最大公因數 (64, 96) = 32。\n答案：最多 32 位學生"
+          }
+        },
+        {
+          id: 'f6',
+          question: "把 72 公分和 96 公分的棉線剪成每段都等長的小段且剛好剪完，每段棉線最長是幾公分？",
+          correctAnswers: ["24", "24公分"],
+          hint: "剪成等長代表求因數，最長代表求最大公因數",
+          userAnswer: "",
+          analysis: {
+            context: "線段剪裁平分問題。",
+            logic: "每段長度必須是 72 的因數，也是 96 的因數，長度要『最長』，因此求 (72, 96)。",
+            sop: "步驟 1：短除法求 72 和 96 的最大公因數：\n72 = 24 × 3\n96 = 24 × 4\n步驟 2：最大公因數為 24。\n答案：24 公分"
+          }
+        },
+        {
+          id: 'f7',
+          question: "100 以內，39 和 78 的公倍數共有幾個？",
+          correctAnswers: ["1", "1個"],
+          hint: "39×2 就是 78，先找最小公倍數",
+          userAnswer: "",
+          analysis: {
+            context: "限定數值範圍內的公倍數個數清點。",
+            logic: "觀察 78 ÷ 39 = 2，78 本身就是 39 的倍數，因此兩數最小公倍數即為 78。",
+            sop: "步驟 1：[39, 78] = 78。\n步驟 2：公倍數序列：78, 156...\n步驟 3：100 以內只有 78 一個滿足條件。\n答案：1 個"
+          }
+        },
+        {
+          id: 'f8',
+          question: "200 減去多少後，才能成為 38 和 95 的最小公倍數？",
+          correctAnswers: ["10"],
+          hint: "先求 [38, 95]，再算 200 和它的差距",
+          userAnswer: "",
+          analysis: {
+            context: "兩數最小公倍數與目標數字的差額計算。",
+            logic: "先求出 38 和 95 的最小公倍數，再用 200 扣除該最小公倍數，即可得到答案。",
+            sop: "步驟 1：38 = 2 × 19；95 = 5 × 19。\n步驟 2：最小公倍數 [38, 95] = 2 × 5 × 19 = 190。\n步驟 3：200 - 190 = 10。\n答案：10"
+          }
+        }
+      ],
+
+      // 四、應用題 (精選12題，考卷全收錄)
+      app: [
+        {
+          id: 'a1',
+          question: "用 0、2、6、9 四張數字卡排出三位數，已知排出的數為 2 和 3 的倍數，這個數可能是多少？(請列出所有可能，以逗號隔開)",
+          correctAnswers: ["690,906,960", "690、906、960", "906,690,960", "906、690、960"],
+          userAnswer: "",
+          analysis: {
+            context: "倍數判別法（2的倍數尾數為偶數；3的倍數數字和可被3整除）。",
+            logic: "① 挑選3張卡片，其數字和必須是 3 的倍數。\n② 個位數必須是偶數（0, 2, 6）。\n③ 百位數不能是 0。",
+            sop: "步驟 1：四張卡片任取三張，數字和為3的倍數組合為 (0, 6, 9) ，因 0+6+9 = 15 能被3整除。\n步驟 2：排出三位數且百位不為0：609, 690, 906, 960。\n步驟 3：要為2的倍數（尾數偶數），剔除609。\n剩下可能：690、906、960。\n答案：690、906、960"
+          }
+        },
+        {
+          id: 'a2',
+          question: "裝潢師傅想用長 20 公分、寬 15 公分的長方形花磚拼成一個正方形的藝術牆面。正方形藝術牆面的邊長最少是幾公分？",
+          correctAnswers: ["60", "60公分"],
+          userAnswer: "",
+          analysis: {
+            context: "小矩形磁磚拼組大正方形，求最小邊長。",
+            logic: "正方形邊長必須既能排滿長（20的倍數），也能排滿寬（15的倍數），題目要求邊長『最少』，即求最小公倍數 [20, 15]。",
+            sop: "步驟 1：20 的倍數：20, 40, 60, 80...\n步驟 2：15 的倍數：15, 30, 45, 60, 75...\n步驟 3：共同最小倍數為 60。\n答案：60 公分"
+          }
+        },
+        {
+          id: 'a3',
+          question: "有甲、乙兩個長方形，甲的面積是 96 平方公分，乙的面積是 84 平方公分。已知甲、乙的長與寬都是整數公分，且兩個長方形的長邊一樣長，剛好是甲、乙面積的最大公因數，則甲、乙的周長相差多少公分？",
+          correctAnswers: ["2", "2公分"],
+          userAnswer: "",
+          analysis: {
+            context: "結合面積、因數與長方形周長公式的綜合題型。",
+            logic: "長邊是兩面積的最大公因數 (96, 84)。求出長邊後，反推各自的寬度，再計算周長差。",
+            sop: "步驟 1：求 (96, 84)：\n96 = 12 × 8，84 = 12 × 7，最大公因數為 12 (長邊 = 12 公分)。\n步驟 2：甲長方形：寬 = 96 ÷ 12 = 8 公分；周長 = (12 + 8) × 2 = 40 公分。\n步驟 3：乙長方形：寬 = 84 ÷ 12 = 7 公分；周長 = (12 + 7) × 2 = 38 公分。\n步驟 4：周長差 = 40 - 38 = 2 公分。\n答案：2 公分"
+          }
+        },
+        {
+          id: 'a4',
+          question: "均妍要打開冷氣時，發現冷氣遙控器被設定密碼了，老師留下的線索是：「7 和 11 的最小公倍數」，冷氣遙控器的密碼是多少？",
+          correctAnswers: ["77"],
+          userAnswer: "",
+          analysis: {
+            context: "兩互質質數的最小公倍數計算情境題。",
+            logic: "7 和 11 都是質數，兩數互質，最大公因數為 1，因此最小公倍數直接相乘。",
+            sop: "步驟 1：判定 7 與 11 互質。\n步驟 2：最小公倍數 = 7 × 11 = 77。\n答案：77"
+          }
+        },
+        {
+          id: 'a5',
+          question: "五年級學生有男生 40 人、女生 56 人，戶外教育時要平分成小隊，每小隊男生一樣多，女生也一樣多且剛好分完，最多可以分成幾小隊？",
+          correctAnswers: ["8", "8小隊", "8隊"],
+          userAnswer: "",
+          analysis: {
+            context: "雙群體分組平分問題。",
+            logic: "隊伍數必須能整除 40（男生），也能整除 56（女生），且隊數要『最多』，故求最大公因數 (40, 56)。",
+            sop: "步驟 1：40 的因數有 1, 2, 4, 5, 8, 10, 20, 40\n步驟 2：56 的因數有 1, 2, 4, 7, 8, 14, 28, 56\n步驟 3：最大公因數為 8。\n答案：最多可分成 8 小隊"
+          }
+        },
+        {
+          id: 'a6',
+          question: "餐盒長 15 公分、寬 12 公分，廠商將餐盒平鋪在底面為正方形的紙箱中剛好鋪滿。這個紙箱的底面面積最少是多少平方公分？",
+          correctAnswers: ["3600", "3600平方公分"],
+          userAnswer: "",
+          analysis: {
+            context: "鋪滿正方形紙箱底面，求『面積』而非僅邊長。",
+            logic: "底面正方形邊長是長與寬的最小公倍數 [15, 12]。算出最小邊長後，再用『邊長 × 邊長』求底面積。",
+            sop: "步驟 1：求最小邊長 [15, 12] = 60 公分。\n步驟 2：正方形底面積 = 邊長 × 邊長 = 60 × 60 = 3600。\n答案：3600 平方公分"
+          }
+        },
+        {
+          id: 'a7',
+          question: "明德路上每 3 公尺種 1 棵樹，每 18 公尺立 1 根電線桿。起點處同時有樹和電線桿，下一個同時有樹和電線桿的地方距離起點多少公尺？",
+          correctAnswers: ["18", "18公尺"],
+          userAnswer: "",
+          analysis: {
+            context: "週期重疊相遇問題。",
+            logic: "同時出現的位置為間距的公倍數，『下一個』即距離起點最近的第一個重合點，求 [3, 18]。",
+            sop: "步驟 1：18 ÷ 3 = 6（18 本身就是 3 的倍數）。\n步驟 2：兩數的最小公倍數 [3, 18] = 18。\n答案：18 公尺"
+          }
+        },
+        {
+          id: 'a8',
+          question: "雜貨店老闆買進一些雞蛋，每 24 顆一數或每 40 顆一數，都『不足 5 顆』，雜貨店老闆最少買進幾顆雞蛋？",
+          correctAnswers: ["115", "115顆"],
+          userAnswer: "",
+          analysis: {
+            context: "餘數與不足數問題（不足 5 顆）。",
+            logic: "『不足5顆』代表只要再加5顆，就能被 24 和 40 整除。因此先求最小公倍數 [24, 40]，再扣掉不足的 5 顆。",
+            sop: "步驟 1：求 24 與 40 的最小公倍數：\n24 = 8 × 3；40 = 8 × 5\n[24, 40] = 8 × 3 × 5 = 120。\n步驟 2：依題意不足 5 顆：120 - 5 = 115。\n答案：115 顆"
+          }
+        },
+        {
+          id: 'a9',
+          question: "有一群小朋友，每 12 個人排成一列或每 15 個人排成一列，都『剛好多出 7 個人』。這群小朋友最少有幾個人？",
+          correctAnswers: ["67", "67人", "67個人"],
+          userAnswer: "",
+          analysis: {
+            context: "餘數問題（多出 7 個人）。",
+            logic: "先求能被 12 和 15 整除的基準最小人數（最小公倍數 [12, 15]），再加上多出的 7 人。",
+            sop: "步驟 1：求 [12, 15]：\n12 = 3 × 4；15 = 3 × 5\n[12, 15] = 3 × 4 × 5 = 60。\n步驟 2：加上多出的 7 人：60 + 7 = 67。\n答案：67 個人"
+          }
+        },
+        {
+          id: 'a10',
+          question: "姐姐每 2 星期回家一次，弟弟每 3 星期回家一次，姐弟兩人這個星期六同時回家，下次要幾天後才會再同時回家？",
+          correctAnswers: ["42", "42天"],
+          userAnswer: "",
+          analysis: {
+            context: "單位轉換陷阱題（題目給星期，問『幾天後』）。",
+            logic: "解法一：先算 2 與 3 星期之最小公倍數為 6 星期，再乘 7 天。\n解法二：先換成天數（14天與21天），再求最小公倍數。",
+            sop: "步驟 1：[2星期, 3星期] = 6 星期。\n步驟 2：1 星期有 7 天。\n步驟 3：6 × 7 = 42 天。\n(或 [14, 21] = 42 天)\n答案：42 天"
+          }
+        },
+        {
+          id: 'a11',
+          question: "有 30 張標示 1~30 號的紙牌。先拿掉 2 的倍數，再從剩下的拿掉 3 的倍數，最後拿掉 5 的倍數。剩下的紙牌由小到大排列，第 6 張紙牌號碼是多少？",
+          correctAnswers: ["19"],
+          userAnswer: "",
+          analysis: {
+            context: "質數篩法（埃拉托斯特尼篩法概念）。",
+            logic: "依序刪除 2, 3, 5 的倍數（注意 1 不是質數但也沒被刪除），列出剩下的數字找第 6 個。",
+            sop: "步驟 1：1~30 中排除 2 的倍數（偶數）。\n步驟 2：再排除 3 的倍數（如 9, 15, 21, 27）。\n步驟 3：再排除 5 的倍數（如 25）。\n步驟 4：列出剩下數字：1, 7, 11, 13, 17, 19, 23, 29。\n步驟 5：第 6 張為 19。\n答案：19"
+          }
+        },
+        {
+          id: 'a12',
+          question: "男生 64 人、女生 80 人參加分組，每組男生一樣多，女生也一樣多且全部分完。若要使『每組的人數最少』，每組共有幾個人？",
+          correctAnswers: ["9", "9人", "9個人"],
+          userAnswer: "",
+          analysis: {
+            context: "雙重逆向思考：每組人數要最少，代表『分的組數要最多』！",
+            logic: "組數最多 = (64, 80) 的最大公因數。求出組數後，分別算出每組男生與女生人數，再相加。",
+            sop: "步驟 1：求 (64, 80) 的最大公因數：\n64 = 16 × 4；80 = 16 × 5\n最大公因數 = 16（代表最多可分成 16 組）。\n步驟 2：每組男生人數 = 64 ÷ 16 = 4 人。\n步驟 3：每組女生人數 = 80 ÷ 16 = 5 人。\n步驟 4：每組總人數 = 4 + 5 = 9 人。\n答案：9 人"
+          }
+        }
+      ]
+    };
+
+    // -------------------------------------------------------------
+    // 2. 狀態管理
+    // -------------------------------------------------------------
+    let currentCategory = 'tf';
+    let currentIndex = 0;
+    let stars = 0;
+    let speechEnabled = true;
+
+    // -------------------------------------------------------------
+    // 3. 語音功能 (iPad Safari / Chrome 原生相容 Web Speech API)
+    // -------------------------------------------------------------
+    function playAudioTone(isCorrect) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (isCorrect) {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12); // E5
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        } else {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(300, ctx.currentTime);
+          osc.frequency.setValueAtTime(220, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+        }
+      } catch (e) {
+        // 音效失敗時靜音，不打擾流程
+      }
+    }
+
+    function speakText(text) {
+      if (!speechEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel(); // 停止先前的朗讀
+
+      // 去除數學符號與排版雜字，讓語音更流暢親切
+      const cleanText = text
+        .replace(/[×*]/g, '乘以')
+        .replace(/[÷/]/g, '除以')
+        .replace(/\[([^\]]+)\]/g, '$1的最小公倍數')
+        .replace(/\(([^)]+)\)/g, '$1的最大公因數')
+        .replace(/ステップ|SOP/gi, '步驟');
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = 'zh-TW';
+      utterance.rate = 0.95; // 適合小學生的適中語速
+      utterance.pitch = 1.05;
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakCurrentQuestion() {
+      const q = mathDatabase[currentCategory][currentIndex];
+      speakText(q.question);
+    }
+
+    function speakExplanation() {
+      const q = mathDatabase[currentCategory][currentIndex];
+      const fullExp = `題目思考邏輯：${q.analysis.logic}。算式步驟：${q.analysis.sop}`;
+      speakText(fullExp);
+    }
+
+    // 切換語音總開關
+    document.getElementById('toggle-speech-btn').addEventListener('click', () => {
+      speechEnabled = !speechEnabled;
+      const icon = document.getElementById('speech-icon');
+      const text = document.getElementById('speech-status-txt');
+      if (speechEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-amber-600';
+        text.innerText = '語音已開啟';
+      } else {
+        window.speechSynthesis.cancel();
+        icon.className = 'fa-solid fa-volume-xmark text-slate-400';
+        text.innerText = '語音已靜音';
+      }
+    });
+
+    // -------------------------------------------------------------
+    // 4. 畫面渲染與切換題型
+    // -------------------------------------------------------------
+    function switchCategory(cat) {
+      currentCategory = cat;
+      currentIndex = 0;
+
+      // 更新按鈕樣式
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-amber-900', 'shadow-sm');
+        btn.classList.add('text-amber-800');
+      });
+      const activeBtn = document.getElementById(`cat-${cat}`);
+      activeBtn.classList.add('bg-white', 'text-amber-900', 'shadow-sm');
+      activeBtn.classList.remove('text-amber-800');
+
+      renderLevelBar();
+      loadQuestion();
+    }
+
+    function renderLevelBar() {
+      const bar = document.getElementById('level-selector-bar');
+      bar.innerHTML = '';
+      const list = mathDatabase[currentCategory];
+
+      list.forEach((item, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `flex-shrink-0 w-11 h-11 rounded-xl font-bold flex items-center justify-center transition border ${
+          idx === currentIndex 
+            ? 'bg-amber-500 text-white border-amber-600 shadow-md ring-2 ring-amber-300' 
+            : item.userAnswer !== null 
+              ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
+              : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-amber-50'
+        }`;
+        btn.innerHTML = `${idx + 1}`;
+        btn.onclick = () => {
+          currentIndex = idx;
+          renderLevelBar();
+          loadQuestion();
+        };
+        bar.appendChild(btn);
+      });
+    }
+
+    function loadQuestion() {
+      window.speechSynthesis.cancel();
+      const q = mathDatabase[currentCategory][currentIndex];
+      const total = mathDatabase[currentCategory].length;
+
+      // 類型標籤
+      const typeBadge = document.getElementById('question-type-badge');
+      if (currentCategory === 'tf') typeBadge.innerText = '觀念是非題';
+      else if (currentCategory === 'choice') typeBadge.innerText = '四選一測驗';
+      else if (currentCategory === 'fill') typeBadge.innerText = '精準填空題';
+      else typeBadge.innerText = '生活應用題';
+
+      document.getElementById('question-number-badge').innerText = `第 ${currentIndex + 1} / ${total} 題`;
+      document.getElementById('question-text').innerText = q.question;
+
+      // 隱藏解題區塊
+      document.getElementById('explanation-container').classList.add('hidden');
+
+      // 構建答題互動區
+      const interactArea = document.getElementById('answer-interactive-area');
+      interactArea.innerHTML = '';
+
+      if (currentCategory === 'tf') {
+        renderTFInteraction(interactArea, q);
+      } else if (currentCategory === 'choice') {
+        renderChoiceInteraction(interactArea, q);
+      } else {
+        renderInputInteraction(interactArea, q);
+      }
+
+      // 自動朗讀題意 (開箱極佳體驗)
+      if (speechEnabled) {
+        setTimeout(() => speakCurrentQuestion(), 300);
+      }
+    }
+
+    // 4.1 是非題按鈕 (大圓按鈕，iPad 極佳點擊感)
+    function renderTFInteraction(container, q) {
+      const wrap = document.createElement('div');
+      wrap.className = 'grid grid-cols-2 gap-4 max-w-md mx-auto';
+
+      const trueBtn = document.createElement('button');
+      trueBtn.className = `py-5 px-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 font-black text-2xl transition active:scale-95 ${
+        q.userAnswer === true 
+          ? 'bg-blue-500 text-white border-blue-600 shadow-md' 
+          : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
+      }`;
+      trueBtn.innerHTML = `<i class="fa-regular fa-circle text-3xl"></i><span class="text-lg">正確 (O)</span>`;
+      trueBtn.onclick = () => submitAnswer(true);
+
+      const falseBtn = document.createElement('button');
+      falseBtn.className = `py-5 px-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 font-black text-2xl transition active:scale-95 ${
+        q.userAnswer === false 
+          ? 'bg-rose-500 text-white border-rose-600 shadow-md' 
+          : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+      }`;
+      falseBtn.innerHTML = `<i class="fa-solid fa-xmark text-3xl"></i><span class="text-lg">錯誤 (X)</span>`;
+      falseBtn.onclick = () => submitAnswer(false);
+
+      wrap.appendChild(trueBtn);
+      wrap.appendChild(falseBtn);
+      container.appendChild(wrap);
+    }
+
+    // 4.2 選擇題按鈕 (直列清爽卡片)
+    function renderChoiceInteraction(container, q) {
+      const wrap = document.createElement('div');
+      wrap.className = 'grid grid-cols-1 md:grid-cols-2 gap-3';
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        const isSelected = q.userAnswer === idx;
+        btn.className = `p-4 rounded-2xl border-2 text-left font-bold transition flex items-center gap-3 active:scale-98 ${
+          isSelected 
+            ? 'bg-amber-500 text-white border-amber-600 shadow-md' 
+            : 'bg-slate-50 hover:bg-amber-50/70 border-slate-200 text-slate-800'
+        }`;
+        btn.innerHTML = `
+          <span class="w-8 h-8 rounded-xl flex items-center justify-center ${isSelected ? 'bg-amber-600 text-white' : 'bg-white text-amber-700 border border-amber-200'} font-black text-sm">
+            ${idx + 1}
+          </span>
+          <span class="text-base flex-1">${opt}</span>
+        `;
+        btn.onclick = () => submitAnswer(idx);
+        wrap.appendChild(btn);
+      });
+      container.appendChild(wrap);
+    }
+
+    // 4.3 填空與應用題輸入區
+    function renderInputInteraction(container, q) {
+      const wrap = document.createElement('div');
+      wrap.className = 'max-w-md mx-auto flex flex-col gap-3';
+
+      const inputGroup = document.createElement('div');
+      inputGroup.className = 'flex gap-2';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = 'answer-input-box';
+      input.value = q.userAnswer || '';
+      input.placeholder = q.hint || '請輸入計算結果...';
+      input.className = 'flex-1 p-3.5 rounded-2xl border-2 border-slate-300 focus:border-amber-500 focus:outline-none font-bold text-lg text-slate-800 bg-slate-50 focus:bg-white transition text-center';
+      
+      input.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') submitInputAnswer();
+      });
+
+      const submitBtn = document.createElement('button');
+      submitBtn.className = 'px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-base rounded-2xl shadow-md transition active:scale-95';
+      submitBtn.innerText = '提交';
+      submitBtn.onclick = submitInputAnswer;
+
+      inputGroup.appendChild(input);
+      inputGroup.appendChild(submitBtn);
+      wrap.appendChild(inputGroup);
+
+      if (q.hint) {
+        const hintTxt = document.createElement('p');
+        hintTxt.className = 'text-xs text-amber-700 text-center font-bold flex items-center justify-center gap-1';
+        hintTxt.innerHTML = `<i class="fa-regular fa-lightbulb"></i> 提示：${q.hint}`;
+        wrap.appendChild(hintTxt);
+      }
+
+      container.appendChild(wrap);
+    }
+
+    function submitInputAnswer() {
+      const input = document.getElementById('answer-input-box');
+      if (!input || !input.value.trim()) return;
+      submitAnswer(input.value.trim());
+    }
+
+    // -------------------------------------------------------------
+    // 5. 判分與呈現 SOP 解析
+    // -------------------------------------------------------------
+    function submitAnswer(userVal) {
+      const q = mathDatabase[currentCategory][currentIndex];
+      q.userAnswer = userVal;
+
+      let isCorrect = false;
+
+      if (currentCategory === 'tf') {
+        isCorrect = (userVal === q.answer);
+      } else if (currentCategory === 'choice') {
+        isCorrect = (userVal === q.answerIndex);
+      } else {
+        // 填空或應用題（去除空白、中英文逗號統一處理）
+        const normalized = String(userVal).replace(/\s+/g, '').replace(/,/g, '、');
+        isCorrect = q.correctAnswers.some(ans => {
+          const normAns = String(ans).replace(/\s+/g, '').replace(/,/g, '、');
+          return normAns === normalized;
+        });
+      }
+
+      // 音效與加分
+      playAudioTone(isCorrect);
+      if (isCorrect) {
+        stars += 10;
+        document.getElementById('star-count').innerText = stars;
+      }
+
+      // 展開詳解區
+      showExplanation(isCorrect, q);
+      renderLevelBar();
+    }
+
+    function showExplanation(isCorrect, q) {
+      const expContainer = document.getElementById('explanation-container');
+      const feedbackBanner = document.getElementById('feedback-banner');
+      const feedbackIcon = document.getElementById('feedback-icon');
+      const feedbackText = document.getElementById('feedback-text');
+
+      expContainer.classList.remove('hidden');
+
+      if (isCorrect) {
+        feedbackBanner.className = 'flex items-center gap-3 p-4 rounded-2xl mb-4 font-bold text-base bg-emerald-100 text-emerald-800 border border-emerald-300';
+        feedbackIcon.className = 'fa-solid fa-circle-check text-2xl text-emerald-600';
+        feedbackText.innerText = '太棒了！答對了！你的因數倍數概念非常清晰！(+10 知識星)';
+      } else {
+        feedbackBanner.className = 'flex items-center gap-3 p-4 rounded-2xl mb-4 font-bold text-base bg-rose-100 text-rose-800 border border-rose-300';
+        feedbackIcon.className = 'fa-solid fa-circle-xmark text-2xl text-rose-600';
+        feedbackText.innerText = '別灰心！這題是易錯考點，仔細閱讀下方的解題思考SOP吧！';
+      }
+
+      // 填入三部曲解析
+      document.getElementById('exp-context').innerText = q.analysis.context;
+      document.getElementById('exp-logic').innerText = q.analysis.logic;
+      document.getElementById('exp-sop').innerText = q.analysis.sop;
+
+      // 語音自動輔助解說
+      if (speechEnabled) {
+        speakExplanation();
+      }
+
+      // 平滑滾動至詳解
+      setTimeout(() => {
+        expContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    }
+
+    function nextQuestion() {
+      const list = mathDatabase[currentCategory];
+      if (currentIndex < list.length - 1) {
+        currentIndex++;
+      } else {
+        // 本分類做完，自動前往下一分類
+        if (currentCategory === 'tf') switchCategory('choice');
+        else if (currentCategory === 'choice') switchCategory('fill');
+        else if (currentCategory === 'fill') switchCategory('app');
+        else {
+          currentIndex = 0;
+        }
+      }
+      renderLevelBar();
+      loadQuestion();
+    }
+
+    // -------------------------------------------------------------
+    // 6. iPad 觸控草稿板功能 (Canvas)
+    // -------------------------------------------------------------
+    const canvasModal = document.getElementById('scratchpad-modal');
+    const canvas = document.getElementById('scratch-canvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let strokeWidth = 3;
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      if (!container) return;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = strokeWidth;
+    }
+
+    function toggleScratchpad() {
+      const isHidden = canvasModal.classList.contains('hidden');
+      if (isHidden) {
+        canvasModal.classList.remove('hidden');
+        setTimeout(() => resizeCanvas(), 50);
+      } else {
+        canvasModal.classList.add('hidden');
+      }
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function setStroke(w) {
+      strokeWidth = w;
+      ctx.lineWidth = w;
+    }
+
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      const pos = getCanvasPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      const pos = getCanvasPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    });
+
+    window.addEventListener('mouseup', () => { isDrawing = false; });
+
+    // iPad Touch 事件原生相容
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isDrawing = true;
+      const pos = getCanvasPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      if (!isDrawing) return;
+      e.preventDefault();
+      const pos = getCanvasPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      isDrawing = false;
+    });
+
+    window.addEventListener('resize', () => {
+      if (!canvasModal.classList.contains('hidden')) {
+        resizeCanvas();
+      }
+    });
+
+    // -------------------------------------------------------------
+    // 7. 初始啟動
+    // -------------------------------------------------------------
+    window.onload = function() {
+      renderLevelBar();
+      loadQuestion();
+    };
+  </script>
+</body>
+</html>
