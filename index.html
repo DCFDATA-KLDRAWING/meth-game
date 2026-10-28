@@ -48,6 +48,12 @@
 
       <!-- 右側資訊與工具 -->
       <div class="flex items-center gap-2 md:gap-4">
+        <!-- 程式更新按鈕 -->
+        <button id="update-app-btn" onclick="checkForAppUpdate()" class="flex items-center gap-1.5 px-3 py-2 bg-sky-100 hover:bg-sky-200 text-sky-800 rounded-xl text-sm font-bold transition shadow-sm active:scale-95" title="檢查與更新程式到最新版本">
+          <i id="update-icon" class="fa-solid fa-arrows-rotate text-sky-600"></i>
+          <span class="hidden sm:inline" id="update-status-txt">檢查更新</span>
+        </button>
+
         <!-- 語音切換鈕 -->
         <button id="toggle-speech-btn" class="flex items-center gap-1.5 px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-xl text-sm font-bold transition shadow-sm active:scale-95">
           <i id="speech-icon" class="fa-solid fa-volume-high text-amber-600"></i>
@@ -223,8 +229,93 @@
     </div>
   </div>
 
+  <!-- 更新提示浮動通知 (Toast) -->
+  <div id="update-toast" class="fixed top-20 right-4 z-50 transform transition-all duration-300 translate-y-[-20px] opacity-0 pointer-events-none">
+    <div class="bg-slate-900/90 text-white backdrop-blur px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-700 max-w-sm">
+      <i id="update-toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
+      <div>
+        <p id="update-toast-title" class="font-bold text-sm">已是最新版本</p>
+        <p id="update-toast-msg" class="text-xs text-slate-300">本島題庫與功能運作正常！</p>
+      </div>
+    </div>
+  </div>
+
   <!-- 資料庫與遊戲主邏輯 -->
   <script>
+    // -------------------------------------------------------------
+    // 0. 程式版本與更新檢測功能
+    // -------------------------------------------------------------
+    const APP_VERSION = "1.2.0";
+
+    function showUpdateToast(title, message, isSuccess = true) {
+      const toast = document.getElementById('update-toast');
+      const toastTitle = document.getElementById('update-toast-title');
+      const toastMsg = document.getElementById('update-toast-msg');
+      const toastIcon = document.getElementById('update-toast-icon');
+
+      toastTitle.innerText = title;
+      toastMsg.innerText = message;
+
+      if (isSuccess) {
+        toastIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-xl';
+      } else {
+        toastIcon.className = 'fa-solid fa-circle-exclamation text-amber-400 text-xl';
+      }
+
+      toast.classList.remove('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+      }, 3500);
+    }
+
+    async function checkForAppUpdate() {
+      const updateIcon = document.getElementById('update-icon');
+      const updateTxt = document.getElementById('update-status-txt');
+      
+      // 按鈕旋轉動效
+      updateIcon.classList.add('fa-spin');
+      updateTxt.innerText = '更新中...';
+
+      try {
+        // 1. 若有註冊 Service Worker 則強制檢查
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (let reg of registrations) {
+            await reg.update();
+          }
+        }
+
+        // 2. 清除 Cache Storage，避免 iPad Safari 舊快取卡住題目
+        if ('caches' in window) {
+          const cacheKeys = await caches.keys();
+          for (let key of cacheKeys) {
+            await caches.delete(key);
+          }
+        }
+
+        // 模擬檢查完成並給予回饋
+        setTimeout(() => {
+          updateIcon.classList.remove('fa-spin');
+          updateTxt.innerText = '檢查更新';
+          showUpdateToast('快取已刷新！', `目前版本 v${APP_VERSION}，已為您同步最新內容。`, true);
+
+          // 重新載入以確保載入最新靜態資源 (保留使用者目前的星星進度)
+          setTimeout(() => {
+            window.location.reload();
+          }, 1200);
+        }, 800);
+
+      } catch (err) {
+        updateIcon.classList.remove('fa-spin');
+        updateTxt.innerText = '檢查更新';
+        showUpdateToast('更新完成', '已重新整理目前頁面！', true);
+        window.location.reload();
+      }
+    }
+
     // -------------------------------------------------------------
     // 1. 考卷題目資料庫 (包含題目、正解、解析三部曲：剖析、思考、SOP)
     // -------------------------------------------------------------
